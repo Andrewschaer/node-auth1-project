@@ -1,6 +1,8 @@
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
+const session = require('express-session');
+const store = require('connect-session-knex')(session);
 
 const usersRouter = require('./users/users-router');
 const authRouter = require('./auth/auth-router');
@@ -17,8 +19,26 @@ const authRouter = require('./auth/auth-router');
   The session can be persisted in memory (would not be adecuate for production)
   or you can use a session store like `connect-session-knex`.
  */
-
 const server = express();
+
+server.use(session({
+  name: 'chocolatechip', // name of the cookie the server will place on client (session id)
+    secret: 'iPreferSugarCookies', // put this in the environment, not the code!
+    cookie: {
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+      secure: false, // only set cookies over https. Server will not send back a cookie over http.
+    }, // 1 day in milliseconds
+    httpOnly: true, // don't let JS code access cookies. Browser extensions run JS code on your browser!
+    resave: false,
+    saveUninitialized: false,
+    store: new store({
+      knex: require('../data/db-config'),
+      tablename: 'sessions',
+      sidfieldname: 'sid',
+      createtable: true,
+      clearInterval: 1000 * 60 * 60,
+    }),
+}));
 
 server.use(helmet());
 server.use(express.json());

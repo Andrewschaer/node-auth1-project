@@ -46,10 +46,10 @@ function checkUsernameFree(req, res, next) {
   }
 */
 function checkUsernameExists(req, res, next) {
-  const { username } = req.body.username
-  User.findBy(username)
+  const { username } = req.body
+  User.findBy({ username })
     .then(possibleUser => {
-      if (possibleUser) {
+      if (possibleUser[0] !== undefined) {
         next();
       } else {
         next({ status: 401, message: 'Invalid credentials'});
